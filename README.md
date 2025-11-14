@@ -80,7 +80,7 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
 
 After starting the bot, you can add it to your **Discord server** and interact with it.
 
-### 🚀 Adding the Bot to Your Server
+### 🚀 Adding the Bot to Your Discord Server
 
 1. Go to your bot’s **installation page** on the Discord Developer Portal:  
    [Discord Bot Installation](https://discord.com/developers/applications/1433566130965844120/installation)
