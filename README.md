@@ -6,6 +6,13 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
 
 <br>
 
+### AI Integrations
+ - Mistral
+ - Ollama
+ - LM Studio (under development)
+
+<br>
+
 ## ⚙️ Installation
 
 1. 📦 Clone Repository:
