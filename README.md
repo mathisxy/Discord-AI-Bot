@@ -9,6 +9,7 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
 ### Supported AI Integrations
 
 [![Mistral](https://img.shields.io/badge/Mistral-Supported-brightgreen)](https://mistral.ai/)
+[![Azure OpenAI](https://img.shields.io/badge/Azure-Supported-brightgreen)](https://ai.azure.com)
 [![Ollama](https://img.shields.io/badge/Ollama-Supported-brightgreen)](https://ollama.com/)
 [![LM Studio](https://img.shields.io/badge/LM%20Studio-Work%20in%20Progress-yellow)](https://lmstudio.ai/)
 
@@ -61,18 +62,34 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
       ```bash
       python minimal_setup.py
       ```
-   3. Follow the prompts 
-   4. The script will automatically create a `.env.{BotName}` file with all values filled in.  
-   
-   **Note:** You can rename the generated file to `.env` so your bot can use it directly:  
+   3. Follow the prompts.  
+      At the end, the script will ask whether you want to generate a systemd service:
+
+      - **Yes:**  
+        The script creates a `.env.{BotName}` file and a matching `{BotName}.service` systemd file.
+
+      - **No:**  
+         The script simply creates a standard `.env` file for direct use.
+
+   4. You can always rename the generated `.env.{BotName}` to `.env` if needed:
       ```bash
       cp .env.Emanuel .env
       ```
+   
+   >Tip: Creating the systemd service allows your bot to run in the background and start automatically on boot.
    
 6. ▶️ Start Bot
    ```bash
    python main.py
    ```
+   or
+   ```bash
+   sudo cp {BotName}.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl start {BotName}
+   sudo systemctl enable {BotName}
+   ```
+
 
 <br>
 
@@ -107,6 +124,7 @@ After starting the bot, you can add it to your **Discord server** and interact w
   ```
 
 <br>
+
 
 ## 👥 User Info Synchronization Logic
 
