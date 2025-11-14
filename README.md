@@ -135,7 +135,7 @@ The bot automatically builds a combined list of user data from **Discord** and a
 
 ```csv
 Discord ID,Name,Discord,Minecraft
-1388538139261538364,Emanuel,@emanuel,ManuCraft
-1423487340843761777,Helper,@help_woman,HelpMaster
-1584829348201934847,Luna,@luna,LunaMC
+1388538139261538364,Emanuel,emanuel,ManuCraft
+1423487340843761777,Helper,help_woman,HelpMaster
+1584829348201934847,Luna,luna,LunaMC
 ```
