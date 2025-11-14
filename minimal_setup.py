@@ -10,10 +10,7 @@ def prompt_default(prompt, default=""):
     return input(f"{prompt}: ")
 
 def replace_line(lines, key, value):
-    """
-    Replace the line in lines that starts with key= with key=value.
-    If key does not exist, append it at the end.
-    """
+    """Replace line starting with key= or append if not found."""
     pattern = re.compile(rf"^{re.escape(key)}=.*$", re.MULTILINE)
     replaced = False
     for i, line in enumerate(lines):
@@ -24,6 +21,32 @@ def replace_line(lines, key, value):
     if not replaced:
         lines.append(f"{key}={value}\n")
     return lines
+
+def create_systemd_service(bot_name: str, working_dir: str):
+    """Create a systemd service file for the bot."""
+    service_content = f"""[Unit]
+Description={bot_name} Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory={working_dir}
+EnvironmentFile={working_dir}/.env.{bot_name}
+ExecStart={working_dir}/venv/bin/python main.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+"""
+    service_file = Path(f"{bot_name}.service")
+    service_file.write_text(service_content, encoding="utf-8")
+    print(f"\n✅ Systemd service file created: {service_file}")
+    print(f"Copy it to /etc/systemd/system/ and enable it with:")
+    print(f"  sudo cp {service_file} /etc/systemd/system/")
+    print(f"  sudo systemctl daemon-reload")
+    print(f"  sudo systemctl start {bot_name}")
+    print(f"  sudo systemctl enable {bot_name}")
 
 def main():
     if not Path(EXAMPLE_FILE).exists():
@@ -91,13 +114,28 @@ def main():
         lines = replace_line(lines, "OLLAMA_TIMEOUT", ollama_timeout)
 
     # ----------------------------
-    # Save new env file
+    # Ask user if they want systemd
     # ----------------------------
-    output_file = f".env.{bot_name}"
-    with open(output_file, "w", encoding="utf-8") as f:
+    use_systemd = prompt_default("\nDo you want to create a systemd service? (y/n)", "n").lower() == "y"
+
+    if use_systemd:
+        env_file_name = f".env.{bot_name}"
+    else:
+        env_file_name = ".env"
+
+    # ----------------------------
+    # Save environment file
+    # ----------------------------
+    with open(env_file_name, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
-    print(f"\n✅ Configuration saved to {output_file}")
+    print(f"\n✅ Configuration saved to {env_file_name}")
+
+    # ----------------------------
+    # Create systemd service if requested
+    # ----------------------------
+    if use_systemd:
+        create_systemd_service(bot_name, str(Path.cwd()))
 
 if __name__ == "__main__":
     main()
