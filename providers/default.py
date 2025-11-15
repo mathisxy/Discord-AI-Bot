@@ -43,3 +43,8 @@ class DefaultLLM(BaseLLM):
     def add_tool_call_results_message(chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:
 
         chat.history.append({"role": "system", "id": tool_call.name, "content": f"#{content}"})
+
+    @staticmethod
+    def generate_id_for_external_tool_call(name: str, arguments: Dict[str, Any]) -> str:
+
+        return "123456789"

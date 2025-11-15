@@ -71,7 +71,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                 if Config.TOOL_INTEGRATION and response.tool_calls:
                     tool_calls = response.tool_calls
                 else:
-                    tool_calls = extract_custom_tool_calls(response.text)
+                    tool_calls = extract_custom_tool_calls(llm, response.text)
 
                 tool_call_errors = False
 
@@ -125,8 +125,8 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
 
                         else:
 
-                            if use_integrated_tools:
-                                llm.add_tool_call_message(chat, [tool_call])
+                            #if use_integrated_tools:
+                            llm.add_tool_call_message(chat, [tool_call])
 
                         run_again = await integration.process_tool_result(tool_call, result, chat) or run_again
 
@@ -181,7 +181,7 @@ async def handle_tool_call(queue: asyncio.Queue[DiscordMessage | None], client: 
     return result
 
 
-def extract_custom_tool_calls(text: str) -> List[LLMToolCall]:
+def extract_custom_tool_calls(llm: BaseLLM, text: str) -> List[LLMToolCall]:
     tool_calls = []
     pattern = r'```tool(.*?)```'
 
@@ -190,7 +190,10 @@ def extract_custom_tool_calls(text: str) -> List[LLMToolCall]:
         raw_json = raw.strip()
         try:
             tool_call_data = json.loads(raw_json)
-            llm_tool_call = LLMToolCall("test", tool_call_data.get("name"), tool_call_data.get("arguments", []))
+            llm_tool_call = LLMToolCall(llm.generate_id_for_external_tool_call(tool_call_data.get("name"), tool_call_data.get("arguments", [])),
+                                        tool_call_data.get("name"),
+                                        tool_call_data.get("arguments", [])
+                                        )
             tool_calls.append(llm_tool_call)
         except json.JSONDecodeError as e:
             raise Exception(f"Error JSON-decoding Tool Calls: {e}")

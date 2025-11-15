@@ -65,7 +65,7 @@ class MultimediaMCPIntegration(MCPIntegration):
         logging.info(result.content[0].type)
 
         if result.content[0].type == "text":
-            logging.info(result.content[0].text)
+            logging.info(result.content[0].text) # Logging only text contents
 
         if result.content[0].type == "image" or result.content[0].type == "audio":
 

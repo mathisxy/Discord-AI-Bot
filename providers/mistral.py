@@ -16,14 +16,6 @@ class MistralLLM(DefaultLLM):
 
         model_name = model_name if model_name else Config.MISTRAL_MODEL
 
-        # async with RunContext(model=Config.MISTRAL_MODEL) as run_ctx:
-        #     run_results = await client.beta.conversations.run_async(
-        #         run_ctx=run_ctx,
-        #         inputs=chat.history[1:],
-        #         #description="Manuel, ein Discord Bot",
-        #         instructions=chat.system_entry
-        #     )
-
         response = await client.chat.complete_async(
             model=model_name,
             messages=chat.history,
@@ -39,19 +31,6 @@ class MistralLLM(DefaultLLM):
 
         return LLMResponse(message.content, tool_calls)
 
-
-# async def call_ai(history: List[Dict], instructions: str) -> str:
-#     mcp_client = MCPClientSSE(sse_params=SSEServerParams(url=mcp_server_url, timeout=100))
-#
-#     async with RunContext(model=model) as run_ctx:
-#         await run_ctx.register_mcp_client(mcp_client=mcp_client)
-#         run_results = await client.beta.conversations.run_async(
-#             run_ctx=run_ctx,
-#             inputs=history,
-#             description="Manuel, ein Discord Bot",
-#             instructions=instructions
-#         )
-#         return run_results.output_as_text
 
     @staticmethod
     def add_tool_call_message(chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
