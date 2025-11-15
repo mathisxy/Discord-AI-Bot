@@ -7,12 +7,14 @@ from mcp import Tool
 from mcp.types import CallToolResult
 
 from core.discord_messages import DiscordMessage
+from providers.base import BaseLLM
 from providers.utils.chat import LLMChat
 
 
 class MCPIntegration:
 
-    def __init__(self, queue: Queue[DiscordMessage]):
+    def __init__(self, llm: BaseLLM, queue: Queue[DiscordMessage]):
+        self.llm = llm
         self.queue = queue
 
     # ---------- Logging ----------
@@ -44,7 +46,9 @@ class MCPIntegration:
 
             logging.info(result_str)
 
-            chat.history.append({"role": "system", "content": f"#{{tool_result für {name}: {result_str}}}"})
+            full_results = self.llm.construct_tool_call_results(name, result_str)
+
+            chat.history.append(full_results)
 
             return True
 

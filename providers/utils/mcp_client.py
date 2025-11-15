@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import re
-from typing import List, Dict
+from typing import List
 
 from fastmcp import Client
 
@@ -12,15 +12,16 @@ from core.discord_messages import DiscordMessage, DiscordMessageReplyTmp, \
 from providers.base import BaseLLM, LLMToolCall
 from providers.utils.chat import LLMChat
 from providers.utils.error_reasoning import error_reasoning
-from providers.utils.mcp_client_integrations.base import MCPIntegration
 from providers.utils.response_filtering import filter_response
 from providers.utils.tool_calls import mcp_to_dict_tools, get_custom_tools_system_prompt, get_tools_system_prompt
 
 
-async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[DiscordMessage | None], integration: MCPIntegration, use_help_bot: bool = False):
+async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[DiscordMessage | None], use_help_bot: bool = False):
 
     if not Config.MCP_SERVER_URL:
         raise Exception("Kein MCP Server URL verfügbar")
+
+    integration = llm.mcp_client_integration_module(llm, queue)
     client = Client(Config.MCP_SERVER_URL, log_handler=integration.log_handler, progress_handler=integration.progress_handler)
 
     async with client:
@@ -136,7 +137,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                         else:
 
                             if use_integrated_tools:
-                                chat.history.append(construct_tool_call_message([tool_call]))
+                                chat.history.append(llm.construct_tool_call_message([tool_call]))
 
                             run_again = await integration.process_tool_result(name, result, chat) or run_again
 
@@ -161,7 +162,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                         finally:
                             await queue.put(DiscordMessageRemoveTmp(key="reasoning"))
 
-                        chat.history.append(construct_tool_call_results(name, reasoning))
+                        chat.history.append(llm.construct_tool_call_results(name, reasoning))
 
                         tool_call_errors = True
 
@@ -191,15 +192,5 @@ def extract_custom_tool_calls(text: str) -> List[LLMToolCall]:
             raise Exception(f"Fehler beim JSON Dekodieren des Tool Calls: {e}")
 
     return tool_calls
-
-def construct_tool_call_message(tool_calls: List[LLMToolCall]) -> Dict[str, str]:
-
-    return {"role": "system", "tool_calls": [
-        {"id": t.name, "arguments": t.arguments} for t in tool_calls
-    ]}
-
-def construct_tool_call_results(name: str, content: str) -> Dict[str, str]: # TODO modularisieren zum Anpassen für verschiedene Modelle
-
-    return {"role": "system", "id": name, "content": f"#{content}"}
 
 

@@ -1,31 +1,15 @@
 import asyncio
 import json
-from typing import List, Dict
+from typing import List, Dict, Any
 from mistralai import Mistral
 
 from core.config import Config
-from core.discord_messages import DiscordMessage, DiscordMessageReply
-from providers.base import BaseLLM, LLMResponse, LLMToolCall
+from providers.default import DefaultLLM, LLMResponse, LLMToolCall
 from providers.utils.chat import LLMChat
-from providers.utils.mcp_client import generate_with_mcp
 
 client = Mistral(api_key=Config.MISTRAL_API_KEY)
 
-class MistralLLM(BaseLLM):
-
-    async def call(self, history: List[Dict], instructions: str, queue: asyncio.Queue[DiscordMessage | None],
-                   channel: str, use_help_bot=False):
-
-        await super().call(history, instructions, queue, channel)
-
-        instructions_entry = {"role": "system", "content": instructions}
-        self.chats[channel].update_history(history, instructions_entry)
-
-        if Config.MCP_INTEGRATION_CLASS:
-            await generate_with_mcp(self, self.chats[channel], queue, self.mcp_client_integration_module(queue))
-        else:
-            response = await self.generate(self.chats[channel])
-            await queue.put(DiscordMessageReply(value=response.text))
+class MistralLLM(DefaultLLM):
 
 
     async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: float | None = None,
@@ -69,3 +53,19 @@ class MistralLLM(BaseLLM):
 #             instructions=instructions
 #         )
 #         return run_results.output_as_text
+
+    @staticmethod
+    def construct_tool_call_message(tool_calls: List[LLMToolCall]) -> Dict[str, Any]:
+
+        return {"role": "system", "tool_calls": [
+            {"id": t.name, "arguments": t.arguments} for t in tool_calls
+        ]}
+
+    @staticmethod
+    def construct_tool_call_results(name: str, content: str) -> Dict[str, str]:
+
+        return {
+            "role": "tool",
+            "tool_call_id": name,
+            "content": f"#{content}"
+        }

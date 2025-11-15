@@ -13,7 +13,6 @@ from core.config import Config
 from core.discord_messages import DiscordMessageFileTmp, DiscordMessageReplyTmp, \
     DiscordMessageProgressTmp, DiscordMessageFile
 from providers.utils.chat import LLMChat
-from providers.utils.mcp_client import construct_tool_call_results
 from providers.utils.mcp_client_integrations.base import MCPIntegration
 
 
@@ -98,7 +97,9 @@ class MultimediaMCPIntegration(MCPIntegration):
 
             logging.info(result_str)
 
-            chat.history.append(construct_tool_call_results(name, result_str))
+            full_results = self.llm.construct_tool_call_results(name, result_str)
+
+            chat.history.append(full_results)
 
             return True
 

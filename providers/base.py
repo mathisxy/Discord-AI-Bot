@@ -4,13 +4,15 @@ import logging
 import pkgutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Type
+from typing import Dict, List, TYPE_CHECKING, Type, Any
 
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.utils import mcp_client_integrations
 from providers.utils.chat import LLMChat
-from providers.utils.mcp_client_integrations.base import MCPIntegration
+
+if TYPE_CHECKING:
+    from providers.utils.mcp_client_integrations.base import MCPIntegration
 
 
 @dataclass
@@ -30,10 +32,10 @@ class BaseLLM(ABC):
         self.chats: Dict[str, LLMChat] = {}
         self.mcp_client_integration_module: Type[MCPIntegration] = self.load_mcp_integration_class()
 
-    @abstractmethod
-    async def call(self, history: List[Dict], instructions: str, queue: asyncio.Queue[DiscordMessage | None], channel: str):
 
-        self.chats.setdefault(channel, LLMChat())
+    @abstractmethod
+    async def call(self, history: List[Dict], instructions: str, queue: asyncio.Queue[DiscordMessage | None], channel: str, use_help_bot=False):
+        pass
 
 
     @abstractmethod
@@ -56,3 +58,14 @@ class BaseLLM(ABC):
 
         from providers.utils.mcp_client_integrations.base import MCPIntegration
         return MCPIntegration
+
+
+    @staticmethod
+    @abstractmethod
+    def construct_tool_call_message(tool_calls: List[LLMToolCall]) -> Dict[str, Any]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def construct_tool_call_results(name: str, content: str) -> Dict[str, str]:
+        pass
