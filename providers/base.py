@@ -4,7 +4,7 @@ import logging
 import pkgutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, TYPE_CHECKING, Type
+from typing import Dict, List, TYPE_CHECKING, Type, Any
 
 from core.chat_history import ChatHistoryMessage
 from core.config import Config
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from providers.utils.mcp_client_integrations.base import MCPIntegration
 
 
-@dataclass
+@dataclass(kw_only=True)
 class LLMToolCall:
     """Supports only calls of type function"""
     id: str
@@ -56,8 +56,8 @@ class BaseLLM(ABC):
             module = importlib.import_module(f"providers.utils.mcp_client_integrations.{module_name}")
             logging.debug(module)
             if hasattr(module, class_name):
-                cls = getattr(module, class_name)
-                return cls
+                integration_cls = getattr(module, class_name)
+                return integration_cls
 
         from providers.utils.mcp_client_integrations.base import MCPIntegration
         return MCPIntegration
@@ -65,7 +65,17 @@ class BaseLLM(ABC):
 
     @classmethod
     @abstractmethod
-    def format_history_entry(cls, entry: ChatHistoryMessage):
+    def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def add_assistant_message(cls, chat: LLMChat, message: str) -> None:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def add_error_message(cls, chat: LLMChat, message: str) -> None:
         pass
 
     @classmethod

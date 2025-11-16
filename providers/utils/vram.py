@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 
 import pynvml
@@ -9,10 +10,12 @@ def check_free_vram(required_gb:float=8):
     info = pynvml.nvmlDeviceGetMemoryInfo(handle)
     free_gb = info.free / 1024**3
     if free_gb < required_gb:
-        raise RuntimeError(f"Nicht genug VRAM: {free_gb:.2f} GB frei, {required_gb} GB benötigt")
-    print(f"Genug VRAM vorhanden: {free_gb:.2f} GB frei")
+        raise RuntimeError(f"Not enough VRAM: {free_gb:.2f} GB free, {required_gb} GB required")
+    logging.info(f"Enough VRAM: {free_gb:.2f} GB free, {required_gb} GB required")
 
 async def wait_for_vram(required_gb:float=8, timeout:float=20, interval:float=1):
+
+    logging.info("Waiting for VRAM")
 
     start = time.time()
 
@@ -22,6 +25,7 @@ async def wait_for_vram(required_gb:float=8, timeout:float=20, interval:float=1)
             break
         except RuntimeError as e:
             if (time.time() - start) >= timeout:
+                logging.exception(f"Wait for vram timeout: {timeout}s, interval: {interval}")
                 raise TimeoutError(f"Timeout: {e}")
             else:
                 await asyncio.sleep(interval)

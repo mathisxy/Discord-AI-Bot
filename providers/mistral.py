@@ -34,16 +34,20 @@ class MistralLLM(DefaultLLM):
 
 
     @classmethod
-    def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
-        """Only used in case of non-integrated tool calling"""
+    def add_error_message(cls, chat: LLMChat, message: str):
+        chat.history.append({"role": "user", "content": message})
 
-        chat.history.append({"role": "assistant", "tool_calls": [
-            {"id": t.id, "type": "function", "function": {
-                "name": t.name,
-                "arguments": t.arguments
-            }
-        } for t in tool_calls
-        ]})
+    @classmethod
+    def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
+
+        if Config.TOOL_INTEGRATION:
+            chat.history.append({"role": "assistant", "tool_calls": [
+                {"id": t.id, "type": "function", "function": {
+                    "name": t.name,
+                    "arguments": t.arguments
+                }
+            } for t in tool_calls
+            ]})
 
     @classmethod
     def add_tool_call_results_message(cls, chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:

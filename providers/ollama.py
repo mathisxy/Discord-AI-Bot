@@ -1,6 +1,8 @@
 import asyncio
 import logging
-from typing import List, Dict, Literal
+import random
+import string
+from typing import List, Dict, Literal, Any
 
 import tiktoken
 
@@ -40,7 +42,10 @@ class OllamaLLM(DefaultLLM):
     @classmethod
     async def generate(cls, chat: LLMChat, model_name: str | None = None, temperature: str | None = None, think: bool | Literal["low", "medium", "high"] | None = None, keep_alive: str | float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
 
-        await wait_for_vram(required_gb=11)
+        if Config.OLLAMA_REQUIRED_VRAM_IN_GB:
+            await wait_for_vram(required_gb=Config.OLLAMA_REQUIRED_VRAM_IN_GB, timeout=Config.OLLAMA_WAIT_FOR_REQUIRED_VRAM)
+        else:
+            logging.warning("Waiting for VRAM is disabled")
 
         model_name = model_name if model_name else Config.OLLAMA_MODEL
         temperature = temperature if temperature else Config.OLLAMA_MODEL_TEMPERATURE
@@ -69,19 +74,19 @@ class OllamaLLM(DefaultLLM):
 
                 logging.info(response)
 
-                tool_calls = [LLMToolCall(id=t.id, name=t.function.name, arguments=dict(t.function.arguments)) for t in response.message.tool_calls] if response.message.tool_calls else []
+                tool_calls = [LLMToolCall(id=''.join(random.choices(string.digits, k=9)),name=t.function.name, arguments=dict(t.function.arguments)) for t in response.message.tool_calls] if response.message.tool_calls else []
 
                 return LLMResponse(text=response.message.content, tool_calls=tool_calls)
 
 
             except Exception as e:
                 logging.error(e, exc_info=True)
-                raise Exception(f"Ollama Fehler: {e}")
+                raise Exception(f"Ollama Error: {e}")
 
 
 
     @classmethod
-    def format_history_entry(cls, entry: ChatHistoryMessage):
+    def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
         formatted_entry = super().format_history_entry(entry)
 
         for file in entry.files:

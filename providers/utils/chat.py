@@ -42,7 +42,7 @@ class LLMChat:
 
     def update_history(self, new_history: List[Dict[str, str]], instructions_entry: Dict[str, str]|None = None, min_overlap=1):
 
-        history_without_tool_results = [x for x in self.history if not (x["role"] == "system" and x["content"].startswith('#'))]
+        history_without_tool_results = [x for x in self.history if not (x["role"] == "system" and x.get("content", "").startswith('#'))]
 
         #print("HISTORY WITHOUT TOOLS")
         #print(history_without_tool_results)

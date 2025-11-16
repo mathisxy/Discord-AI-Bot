@@ -6,6 +6,8 @@ import os
 
 from typing import Literal, List
 
+from pytimeparse.timeparse import timeparse
+
 load_dotenv()
 
 class Config:
@@ -41,23 +43,20 @@ class Config:
                 raise Exception(f"Ungültiger Wert für Ollama Think Parameter: {value}")
 
     @staticmethod
-    def extract_ollama_keep_alive(value: str|None) -> str|float|None:
-        if not value:
-            return None
-
-        value = value.lower().strip()
-
-        try:
-            number = float(value)
-            return number
-        except ValueError:
-            return value
-
-    @staticmethod
     def extract_csv_tags(value: str | None) -> List[str]:
         if not value:
             return []
         return [tag.strip() for tag in value.split(",") if tag.strip()]
+
+    @staticmethod
+    def extract_duration(value: str | None) -> int|float | None:
+        """Returns seconds"""
+
+        if not value:
+            return None
+
+        return timeparse(value)
+
 
     @staticmethod
     def require_env(name: str) -> str:
@@ -87,10 +86,12 @@ class Config:
     OLLAMA_MODEL: str = require_env("OLLAMA_MODEL")
     OLLAMA_MODEL_TEMPERATURE: float|None = float(value) if (value := os.getenv("OLLAMA_MODEL_TEMPERATURE")) else None
     OLLAMA_THINK: bool|Literal["low", "medium", "high"]|None = extract_ollama_think(os.getenv("OLLAMA_THINK"))
-    OLLAMA_KEEP_ALIVE: str|float|None = os.getenv("OLLAMA_KEEP_ALIVE")
-    OLLAMA_TIMEOUT: float|None = float(value) if (value := os.getenv("OLLAMA_TIMEOUT")) else None
+    OLLAMA_KEEP_ALIVE: float | int | None = extract_duration(os.getenv("OLLAMA_KEEP_ALIVE"))
+    OLLAMA_TIMEOUT: float | int | None = extract_duration(os.getenv("OLLAMA_TIMEOUT"))
     OLLAMA_IMAGE_MODEL: bool = os.getenv("OLLAMA_IMAGE_MODEL", "").lower() == "true"
     OLLAMA_IMAGE_MODEL_TYPES: List[str] = extract_csv_tags(require_env("OLLAMA_IMAGE_MODEL_TYPES"))
+    OLLAMA_REQUIRED_VRAM_IN_GB: float | int | None = int(value) if (value := os.getenv("OLLAMA_REQUIRED_VRAM_IN_GB")) else None
+    OLLAMA_WAIT_FOR_REQUIRED_VRAM: float | int | None = extract_duration(os.getenv("OLLAMA_WAIT_FOR_REQUIRED_VRAM"))
 
     TOOL_INTEGRATION: bool = os.getenv("TOOL_INTEGRATION", "").lower() == "true"
     MCP_SERVER_URL: str|None = os.getenv("MCP_SERVER_URL")

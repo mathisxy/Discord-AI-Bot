@@ -60,8 +60,10 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
 
             if response.text:
 
-                chat.history.append({"role": "assistant", "content": response.text})
-                await queue.put(DiscordMessageReply(value=filter_response(response.text, Config.OLLAMA_MODEL)))
+                filtered_text = filter_response(response.text, Config.OLLAMA_MODEL)
+
+                llm.add_assistant_message(chat, filtered_text)
+                await queue.put(DiscordMessageReply(value=filtered_text))
 
             if deny_tools:
                 break
@@ -81,7 +83,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
 
                 if Config.MCP_ERROR_HELP_DISCORD_ID and use_help_bot:
                     await queue.put(DiscordMessageReplyTmpError(
-                        value=f"<@{Config.MCP_ERROR_HELP_DISCORD_ID}> Ein Fehler ist aufgetreten: {e}",
+                        value=f"<@{Config.MCP_ERROR_HELP_DISCORD_ID}> {e}",
                         embed=False
                     ))
                     break
@@ -89,7 +91,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                 try:
                     await queue.put(DiscordMessageReplyTmp(
                         key="reasoning",
-                        value="Aufgetretener Fehler wird analysiert..."
+                        value="Analyzing Error..."
                     ))
                     reasoning = await error_reasoning(str(e), llm, chat)
 
@@ -100,7 +102,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                 finally:
                     await queue.put(DiscordMessageRemoveTmp(key="reasoning"))
 
-                chat.history.append({"role": "user", "name": "system", "content": reasoning})
+                llm.add_error_message(chat, reasoning)
                 tool_call_errors = True
 
                 continue
@@ -113,20 +115,15 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                 for tool_call in tool_calls:
 
                     logging.info(f"TOOL CALL: {tool_call}")
-
+                    llm.add_tool_call_message(chat, [tool_call])
 
                     try:
 
                         result = await handle_tool_call(queue, client, tool_call)
 
                         if not result.content:
-                            logging.warning("Kein Tool Result Content, manuelle Unterbrechung")
-                            continue # Manuelle Unterbrechung
-
-                        else:
-
-                            #if use_integrated_tools:
-                            llm.add_tool_call_message(chat, [tool_call])
+                            logging.warning("Empty Tool Result Content, asserting manual break")
+                            continue
 
                         run_again = await integration.process_tool_result(tool_call, result, chat) or run_again
 
@@ -141,7 +138,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                             break
 
                         try:
-                            await queue.put(DiscordMessageReplyTmp(key="reasoning", value="Aufgetretener Fehler wird analysiert..."))
+                            await queue.put(DiscordMessageReplyTmp(key="reasoning", value="Analyzing Error..."))
                             reasoning = await error_reasoning(str(e), llm, chat)
 
                         except Exception as f:
@@ -151,15 +148,16 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                         finally:
                             await queue.put(DiscordMessageRemoveTmp(key="reasoning"))
 
-                        llm.add_tool_call_results_message(chat, tool_call, reasoning)
+                        llm.add_error_message(chat, reasoning)
 
                         tool_call_errors = True
+                        run_again = True
 
 
                 logging.info(chat.history)
 
                 if not run_again:
-                    logging.debug("Die Tool Results werden nicht erneut vom LLM verarbeitet")
+                    logging.info("The LLM is not instructed to run again on tool results")
                     break
 
             else:

@@ -121,7 +121,7 @@ async def handle_message(message):
 
                     role: Literal["user", "assistant"] = "assistant" if msg.author == bot.user else "user"
                     timestamp = format_time(msg.created_at,  format='short', tzinfo=Config.TIMEZONE, locale=Config.LANGUAGE) # Adapt Timestamp Format to Timezone and Language
-                    content = msg.content if msg.author == bot.user else f"<#Message from=\"<@{msg.author.id}>\" at=\"{timestamp}\"> {msg.content}"
+                    content = msg.content if msg.author == bot.user else f"<#Message from=\"<@{msg.author.id}>\" at=\"{timestamp}\">{msg.content}</Message>"
                     files = []
 
                     if msg.attachments:
@@ -138,17 +138,13 @@ async def handle_message(message):
 
                                 files.append(ChatHistoryFileSaved(attachment.filename, attachment.content_type, save_path))
 
-                                # content += f"\n<#Imagename: {attachment.filename}>"
                             elif attachment.content_type and "text" in attachment.content_type:
                                 text_bytes = await attachment.read()
                                 text_content = text_bytes.decode("utf-8")
 
                                 files.append(ChatHistoryFileText(attachment.filename, attachment.content_type, text_content))
-
-                                # content += f"\n<#Filename: {attachment.filename}, content follows:>\n{text_content}"
                             else:
                                 files.append(ChatHistoryFile(attachment.filename, attachment.content_type))
-                                # content += f"\n<#Filename: {attachment.filename}>"
 
                     if not content and not files:
                         continue
