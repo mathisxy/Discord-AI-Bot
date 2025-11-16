@@ -1,6 +1,9 @@
 import asyncio
+import json
+import string
 from abc import abstractmethod
-from typing import List, Dict, Any
+import random
+from typing import List, Dict
 
 from core.config import Config
 from core.discord_messages import DiscordMessage, DiscordMessageReply
@@ -45,6 +48,11 @@ class DefaultLLM(BaseLLM):
         chat.history.append({"role": "system", "id": tool_call.name, "content": f"#{content}"})
 
     @staticmethod
-    def generate_id_for_external_tool_call(name: str, arguments: Dict[str, Any]) -> str:
+    def extract_custom_tool_call(text: str) -> LLMToolCall:
 
-        return "123456789"
+        id_length = 9
+
+        tool_call = json.loads(text)
+        tool_call_id = ''.join(random.choices(string.digits, k=id_length))
+
+        return LLMToolCall(tool_call_id, tool_call.get("name"), tool_call.get("arguments"))

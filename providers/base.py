@@ -4,7 +4,7 @@ import logging
 import pkgutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, TYPE_CHECKING, Type, Any
+from typing import Dict, List, TYPE_CHECKING, Type
 
 from core.config import Config
 from core.discord_messages import DiscordMessage
@@ -74,5 +74,5 @@ class BaseLLM(ABC):
 
     @staticmethod
     @abstractmethod
-    def generate_id_for_external_tool_call(name: str, arguments: Dict[str, Any]) -> str:
+    def extract_custom_tool_call(text: str) -> LLMToolCall:
         pass

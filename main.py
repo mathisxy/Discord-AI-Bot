@@ -126,7 +126,7 @@ async def handle_message(message):
                     if msg.attachments:
                         for attachment in msg.attachments:
 
-                            if attachment.content_type and Config.AI == "ollama" and Config.OLLAMA_IMAGE_MODEL and attachment.content_type in Config.OLLAMA_IMAGE_MODEL_TYPES: # TODO Modularize + Language Options
+                            if attachment.content_type and Config.AI == "ollama" and Config.OLLAMA_IMAGE_MODEL and attachment.content_type in Config.OLLAMA_IMAGE_MODEL_TYPES: # TODO Modularize
                                 image_bytes = await attachment.read()
                                 image_filename = attachment.filename
 

@@ -189,11 +189,7 @@ def extract_custom_tool_calls(llm: BaseLLM, text: str) -> List[LLMToolCall]:
     for raw in matches:
         raw_json = raw.strip()
         try:
-            tool_call_data = json.loads(raw_json)
-            llm_tool_call = LLMToolCall(llm.generate_id_for_external_tool_call(tool_call_data.get("name"), tool_call_data.get("arguments", [])),
-                                        tool_call_data.get("name"),
-                                        tool_call_data.get("arguments", [])
-                                        )
+            llm_tool_call = llm.extract_custom_tool_call(raw_json)
             tool_calls.append(llm_tool_call)
         except json.JSONDecodeError as e:
             raise Exception(f"Error JSON-decoding Tool Calls: {e}")
