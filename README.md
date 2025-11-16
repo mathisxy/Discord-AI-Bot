@@ -9,14 +9,12 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
 ### Supported AI Integrations
 
 [![Mistral](https://img.shields.io/badge/Mistral-Supported-brightgreen)](https://mistral.ai/)
-[![Azure OpenAI](https://img.shields.io/badge/Azure-Supported-brightgreen)](https://ai.azure.com)
+[![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-Supported-brightgreen)](https://ai.azure.com)
 [![Ollama](https://img.shields.io/badge/Ollama-Supported-brightgreen)](https://ollama.com/)
-[![LM Studio](https://img.shields.io/badge/LM%20Studio-Work%20in%20Progress-yellow)](https://lmstudio.ai/)
-
 
 <br>
 
-## ⚙️ Installation
+## ⚙️ Installation on Linux
 
 1. 📦 Clone Repository:
    ```bash
@@ -27,16 +25,9 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
    Make sure that **Python 3.12+** is installed\
    Create and activate a Python Virtual Environment:
 
-   **Linux / macOS**
    ```bash
    python3 -m venv venv
    source venv/bin/activate
-   ```
-
-   **Windows (PowerShell)**
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
    ```
    
    Afterwards install the requirements:
