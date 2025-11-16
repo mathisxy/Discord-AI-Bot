@@ -1,12 +1,12 @@
 # LLM Discord Bot
 
 
-This project implements a custom **Discord Bot** with integrated **LLM Backend** and optional **MCP Integration**.
+This project implements a custom **Discord Bot** with integrated **LLM Backend** and optional tool calling via **MCP Integration**.
 > Under development, not feature complete.
 
 <br>
 
-### Supported AI Integrations
+### Supported API Integrations
 
 [![Mistral](https://img.shields.io/badge/Mistral-Supported-brightgreen)](https://mistral.ai/)
 [![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-Supported-brightgreen)](https://ai.azure.com)
