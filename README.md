@@ -6,7 +6,7 @@ This project implements a custom **Discord Bot** with integrated **LLM Backend**
 
 <br>
 
-### Supported AI API Integrations
+### Supported API Integrations
 
 [![Mistral](https://img.shields.io/badge/Mistral-Supported-brightgreen)](https://mistral.ai/)
 [![Azure OpenAI](https://img.shields.io/badge/Azure_OpenAI-Supported-brightgreen)](https://ai.azure.com)
