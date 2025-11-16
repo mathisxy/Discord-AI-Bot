@@ -2,10 +2,11 @@ import asyncio
 import io
 import logging
 import os
+from datetime import datetime
 from typing import List, Literal
 
 import discord
-from babel.dates import format_time
+from babel.dates import format_time, format_datetime, format_date
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -166,6 +167,7 @@ async def handle_message(message):
 
                 instructions.content = instructions.content.replace("[#NAME]", Config.NAME)
                 instructions.content = instructions.content.replace("[#DISCORD_ID]", str(Config.DISCORD_ID))
+                instructions.content = instructions.content.replace("[#CURRENT_DATE]", format_date(datetime.now(), format='long', locale=Config.LANGUAGE))
 
                 logging.info(instructions)
 
