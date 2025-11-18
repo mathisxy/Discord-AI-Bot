@@ -69,19 +69,19 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
       cp .env.emanuel .env
       ```
    
-   >Tip: Creating the systemd service allows your bot to run in the background and start automatically on boot.
    
 6. ▶️ Start Bot
    ```bash
    python main.py
    ```
-   or
+   or create a systemd service:
    ```bash
    sudo cp {botname}.service /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl start {botname}
    sudo systemctl enable {botname}
    ```
+   >Tip: Creating a systemd service allows your bot to run in the background and start automatically on boot.
 
 
 <br>
