@@ -20,8 +20,10 @@ from core.instructions import get_instructions_from_discord_info
 from core.logging_config import setup_logging
 from core.message_handling import clean_reply
 from providers.azure import AzureLLM
+from providers.gemini import GeminiLLM
 from providers.mistral import MistralLLM
 from providers.ollama import OllamaLLM
+from providers.openai import OpenAILLM
 
 load_dotenv()
 
@@ -43,6 +45,10 @@ match Config.AI:
         llm = MistralLLM()
     case "azure":
         llm = AzureLLM()
+    case "gemini":
+        llm = GeminiLLM()
+    case "openai":
+        llm = OpenAILLM()
     case "ollama":
         llm = OllamaLLM()
 

@@ -82,6 +82,13 @@ class Config:
     AZURE_OPENAI_ENDPOINT: str = require_env("AZURE_OPENAI_ENDPOINT")
     AZURE_OPENAI_MODEL: str = require_env("AZURE_OPENAI_MODEL")
 
+    GEMINI_API_KEY: str|None = os.getenv("GEMINI_API_KEY")
+    GEMINI_ENDPOINT: str = require_env("GEMINI_ENDPOINT")
+    GEMINI_MODEL: str = require_env("GEMINI_MODEL")
+
+    OPENAI_API_KEY: str|None = os.getenv("OPENAI_API_KEY")
+    OPENAI_MODEL: str = require_env("OPENAI_MODEL")
+
     OLLAMA_URL: str = require_env("OLLAMA_URL")
     OLLAMA_MODEL: str = require_env("OLLAMA_MODEL")
     OLLAMA_MODEL_TEMPERATURE: float|None = float(value) if (value := os.getenv("OLLAMA_MODEL_TEMPERATURE")) else None
