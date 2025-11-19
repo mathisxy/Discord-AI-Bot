@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime
 from typing import List, Literal
-from pathlib import Path
+
 import discord
 from babel.dates import format_time, format_date
 from discord.ext import commands
