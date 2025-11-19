@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import random
 import string
@@ -60,7 +61,7 @@ class OllamaLLM(DefaultLLM):
 
             logging.info(response)
 
-            tool_calls = [LLMToolCall(id=''.join(random.choices(string.digits, k=9)),name=t.function.name, arguments=dict(t.function.arguments)) for t in response.message.tool_calls] if response.message.tool_calls else []
+            tool_calls = [LLMToolCall(id=''.join(random.choices(string.digits, k=9)), name=t.function.name, arguments=dict(t.function.arguments)) for t in response.message.tool_calls] if response.message.tool_calls else []
 
             return LLMResponse(text=response.message.content, tool_calls=tool_calls)
 
@@ -69,6 +70,22 @@ class OllamaLLM(DefaultLLM):
             logging.error(e, exc_info=True)
             raise Exception(f"Ollama Error: {e}")
 
+
+    @classmethod
+    def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
+        if Config.TOOL_INTEGRATION:
+            chat.history.append({"role": "assistant", "tool_calls": [
+                {"id": t.id, "type": "function", "function": {
+                    "name": t.name,
+                    "arguments": t.arguments
+                }
+                 } for t in tool_calls
+            ]})
+
+    @classmethod
+    def add_tool_call_results_message(cls, chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:
+
+        chat.history.append({"role": "system", "tool_call_id": tool_call.id, "content": f"#{content}"})
 
 
     @classmethod
@@ -86,8 +103,3 @@ class OllamaLLM(DefaultLLM):
         logging.info(formatted_entry)
 
         return formatted_entry
-
-    @classmethod
-    def add_tool_call_results_message(cls, chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:
-
-        chat.history.append({"role": "system", "tool_call_id": tool_call.id, "content": f"#{content}"})
