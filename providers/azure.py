@@ -22,6 +22,7 @@ class AzureLLM(DefaultLLM):
 
         model_name = model_name if model_name else Config.AZURE_OPENAI_MODEL
         temperature = temperature if temperature else omit
+        tools = tools if tools else omit
 
         logging.info(temperature)
 
@@ -29,7 +30,7 @@ class AzureLLM(DefaultLLM):
             model=model_name,
             messages=chat.history,
             temperature=temperature,
-            # tools=tools  # Optional, falls Tools unterstützt werden
+            tools=tools,
         )
 
         message = completion.choices[0].message

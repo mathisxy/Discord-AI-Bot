@@ -26,7 +26,7 @@ class GeminiLLM(DefaultLLM):
             model=model_name,
             messages=chat.history,
             temperature=temperature,
-            # tools=tools
+            tools=tools
         )
 
         message = completion.choices[0].message

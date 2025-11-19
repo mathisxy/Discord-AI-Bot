@@ -86,3 +86,8 @@ class OllamaLLM(DefaultLLM):
         logging.info(formatted_entry)
 
         return formatted_entry
+
+    @classmethod
+    def add_tool_call_results_message(cls, chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:
+
+        chat.history.append({"role": "system", "tool_call_id": tool_call.id, "content": f"#{content}"})

@@ -57,10 +57,10 @@ class DefaultLLM(BaseLLM):
     @classmethod
     def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
         if Config.TOOL_INTEGRATION:
-            chat.history.append({"role": "system", "tool_calls": [
+            chat.history.append({"role": "assistant", "tool_calls": [
                 {"id": t.id, "type": "function", "function": {
                     "name": t.name,
-                    "arguments": t.arguments
+                    "arguments": json.dumps(t.arguments)
                 }
                  } for t in tool_calls
             ]})
@@ -68,7 +68,7 @@ class DefaultLLM(BaseLLM):
     @classmethod
     def add_tool_call_results_message(cls, chat: LLMChat, tool_call: LLMToolCall, content: str) -> None:
 
-        chat.history.append({"role": "system", "tool_call_id": tool_call.id, "content": f"#{content}"})
+        chat.history.append({"role": "tool", "tool_call_id": tool_call.id, "content": f"#{content}"})
 
     @classmethod
     def extract_custom_tool_call(cls, text: str) -> LLMToolCall:

@@ -20,10 +20,10 @@ async def error_reasoning(
 
         if message.get("role") == "user":
             logging.info("ist user message -> break")
-            user_message = message.get("content")
+            user_message = message.get("content", "")
             break
 
-        assistant_messages.insert(0, message.get("content"))
+        assistant_messages.insert(0, message.get("content", ""))
 
     # Formatierung
 

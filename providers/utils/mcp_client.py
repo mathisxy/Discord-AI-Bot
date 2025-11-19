@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import re
+from sys import exc_info
 from typing import List
 
 from fastmcp import Client
@@ -96,7 +97,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                     reasoning = await error_reasoning(str(e), llm, chat)
 
                 except Exception as f:
-                    logging.error(f)
+                    logging.error(f, exc_info=True)
                     reasoning = str(e)
 
                 finally:
@@ -142,13 +143,13 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                             reasoning = await error_reasoning(str(e), llm, chat)
 
                         except Exception as f:
-                            logging.error(f)
+                            logging.error(f, exc_info=True)
                             reasoning = str(e)
 
                         finally:
                             await queue.put(DiscordMessageRemoveTmp(key="reasoning"))
 
-                        llm.add_error_message(chat, reasoning)
+                        llm.add_tool_call_results_message(chat, tool_call, reasoning)
 
                         tool_call_errors = True
                         run_again = True
@@ -190,7 +191,7 @@ def extract_custom_tool_calls(llm: BaseLLM, text: str) -> List[LLMToolCall]:
             llm_tool_call = llm.extract_custom_tool_call(raw_json)
             tool_calls.append(llm_tool_call)
         except json.JSONDecodeError as e:
-            raise Exception(f"Error JSON-decoding Tool Calls: {e}")
+            raise Exception(f"Error JSON-decoding Tool Call: {raw_json}\n{e}")
 
     return tool_calls
 
