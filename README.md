@@ -12,6 +12,7 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
  - Modular design for easy integration of AI models
  - Tool calling via MCP
  - Custom MCP integrations
+ - Vision support for images
 
 <br>
 
