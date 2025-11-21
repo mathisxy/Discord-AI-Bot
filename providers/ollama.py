@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import random
 import string
@@ -7,11 +6,11 @@ from typing import List, Dict, Literal, Any, Tuple
 
 from ollama import AsyncClient
 
+from core.chat import LLMChat
 from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved, ChatHistoryFile, ChatHistoryFileText
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.default import DefaultLLM, LLMResponse, LLMToolCall
-from core.chat import LLMChat
 from providers.utils.vram import wait_for_vram
 
 
@@ -80,10 +79,10 @@ class OllamaLLM(DefaultLLM):
     @classmethod
     def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
 
-        if entry.tool_response:
+        if entry.tool_response: # TODO adapt to API Reference of ollama
             tool_call, tool_response = entry.tool_response
             return {
-                "role": "tool",
+                "role": "tool" if Config.TOOL_INTEGRATION else "system",
                 "tool_call_id": tool_call.id,
                 "content": tool_response,
             }
