@@ -46,7 +46,7 @@ class MCPIntegration:
 
             logging.info(result_str)
 
-            self.llm.add_tool_call_results_message(chat, tool_call, result_str)
+            self.llm.add_tool_call_results_message(chat, [(tool_call, result_str)])
 
             return True
 

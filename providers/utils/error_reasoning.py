@@ -1,5 +1,6 @@
 import logging
 
+from core.chat_history import ChatHistoryMessage
 from providers.base import BaseLLM
 from core.chat import LLMChat
 
@@ -10,7 +11,7 @@ async def error_reasoning(
         chat: LLMChat,
 ):
 
-    instructions = chat.history[0].get("content")
+    instructions = chat.history[0].content
     assistant_messages = []
     user_message = ""
 
@@ -18,12 +19,12 @@ async def error_reasoning(
 
         logging.info(message)
 
-        if message.get("role") == "user":
+        if message.role == "user":
             logging.info("ist user message -> break")
-            user_message = message.get("content", "")
+            user_message = message.content if message.content else ""
             break
 
-        assistant_messages.insert(0, message.get("content", ""))
+        assistant_messages.insert(0, message.content if message.content else "")
 
     # Formatierung
 
@@ -62,7 +63,7 @@ Erkläre dann klar und möglichst knapp wie der Fehler entstanden ist und wie er
     logging.info(context)
 
     reasoning_chat = LLMChat()
-    reasoning_chat.history.append({"role": "system", "content": context})
+    reasoning_chat.history.append(ChatHistoryMessage(role="system", content=context))
 
     reasoning = await llm.generate(reasoning_chat)
 

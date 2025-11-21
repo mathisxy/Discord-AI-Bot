@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import random
 import string
@@ -6,7 +7,7 @@ from typing import List, Dict, Literal, Any, Tuple
 
 from ollama import AsyncClient
 
-from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved
+from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved, ChatHistoryFile, ChatHistoryFileText
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.default import DefaultLLM, LLMResponse, LLMToolCall
@@ -72,21 +73,49 @@ class OllamaLLM(DefaultLLM):
     @classmethod
     def add_tool_call_results_message(cls, chat: LLMChat, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
 
-        chat.history.append(ChatHistoryMessage(role="tool", tool_responses=tool_responses, is_temporary=True))
+        for tool_response in tool_responses:
+            chat.history.append(ChatHistoryMessage(role="tool", tool_response=tool_response, is_temporary=True))
 
 
     @classmethod
     def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
-        formatted_entry = super().format_history_entry(entry)
+
+        if entry.tool_response:
+            tool_call, tool_response = entry.tool_response
+            return {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": tool_response,
+            }
+
+        content = entry.content if entry.content else ""
+        tool_calls = []
+        images = []
+
 
         for file in entry.files:
-            logging.info(file)
-            if isinstance(file, ChatHistoryFileSaved):
-                logging.info(f"Found saved file entry in history: {file}")
-                if file.mime_type in Config.OLLAMA_VISION_MODEL_TYPES:
-                    logging.info(f"Is image")
-                    formatted_entry.setdefault("images", []).append(file.save_path)
+            if isinstance(file, ChatHistoryFile):
+                if isinstance(file, ChatHistoryFileText):
+                    content += f"\n<#File filename=\"{file.name}\">{file.text_content}</File>"
+                elif isinstance(file, ChatHistoryFileSaved):
+                    logging.info(f"Found saved file entry in history: {file}")
+                    if file.mime_type in Config.OLLAMA_VISION_MODEL_TYPES:
+                        logging.info(f"Is image")
+                        images.append(file.save_path)
+                else:
+                    content += f"\n<#File filename=\"{file.name}\">"
 
-        logging.info(formatted_entry)
+        for tool_call in entry.tool_calls:
+            tool_calls.append({
+                "id": tool_call.id, "type": "function", "function": {
+                    "name": tool_call.name,
+                    "arguments": tool_call.arguments
+                }
+            })
 
-        return formatted_entry
+        return {
+            "role": entry.role,
+            "content": content,
+            **({"tool_calls": tool_calls} if tool_calls else {}),
+            **({"images": images} if images else {}),
+        }

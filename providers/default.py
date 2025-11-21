@@ -35,7 +35,16 @@ class DefaultLLM(BaseLLM):
     @classmethod
     def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
 
+        if entry.tool_response:
+            tool_call, tool_response = entry.tool_response
+            return {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": tool_response,
+            }
+
         parts = []
+        tool_calls = []
 
         if entry.content:
             parts.append({
@@ -58,23 +67,17 @@ class DefaultLLM(BaseLLM):
                     })
 
         for tool_call in entry.tool_calls:
-            parts.append({
+            tool_calls.append({
                 "id": tool_call.id, "type": "function", "function": {
                     "name": tool_call.name,
                     "arguments": json.dumps(tool_call.arguments)
                 }
             })
 
-        for tool_call, tool_response in entry.tool_responses:
-            parts.append({
-                "type": "function_call_output",
-                "call_id": tool_call.id,
-                "output": tool_response,
-            })
-
         return {
             "role": entry.role,
             "content": parts,
+            **({"tool_calls": tool_calls} if tool_calls else {}),
         }
 
 
@@ -96,7 +99,8 @@ class DefaultLLM(BaseLLM):
     @classmethod
     def add_tool_call_results_message(cls, chat: LLMChat, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
 
-        chat.history.append(ChatHistoryMessage(role="tool", tool_responses=tool_responses, is_temporary=True))
+        for tool_response in tool_responses:
+            chat.history.append(ChatHistoryMessage(role="tool", tool_response=tool_response, is_temporary=True))
 
     @classmethod
     def extract_custom_tool_call(cls, text: str) -> LLMToolCall:

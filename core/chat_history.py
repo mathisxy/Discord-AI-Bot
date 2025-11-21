@@ -1,9 +1,18 @@
 from dataclasses import dataclass, field
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Dict, List
 from pathlib import Path
 
-from providers.base import LLMToolCall
+@dataclass(kw_only=True)
+class LLMToolCall:
+    """Supports only calls of type function"""
+    id: str
+    name: str
+    arguments: Dict
 
+@dataclass
+class LLMResponse:
+    text: str
+    tool_calls: List[LLMToolCall] = field(default_factory=list)
 
 @dataclass
 class ChatHistoryFile:
@@ -28,6 +37,6 @@ class ChatHistoryMessage:
     content: str|None = None
     files: [ChatHistoryFile] = field(default_factory=list)
     tool_calls: [LLMToolCall] = field(default_factory=list)
-    tool_responses: [Tuple[LLMToolCall, str]] = field(default_factory=list)
+    tool_response: Tuple[LLMToolCall, str] = field(default_factory=list)
 
     is_temporary: bool = False

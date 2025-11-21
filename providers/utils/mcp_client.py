@@ -148,7 +148,7 @@ async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[Di
                         finally:
                             await queue.put(DiscordMessageRemoveTmp(key="reasoning"))
 
-                        llm.add_tool_call_results_message(chat, tool_call, reasoning)
+                        llm.add_tool_call_results_message(chat, [(tool_call, reasoning)])
 
                         tool_call_errors = True
                         run_again = True

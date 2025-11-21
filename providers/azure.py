@@ -38,6 +38,8 @@ class AzureLLM(DefaultLLM):
 
         message = completion.choices[0].message
 
+        logging.info("AZURE RESPONSE MESSAGE: %s", message)
+
         tool_calls = []
         if hasattr(message, "tool_calls") and message.tool_calls:
             tool_calls = [

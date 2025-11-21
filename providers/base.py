@@ -3,30 +3,16 @@ import importlib
 import logging
 import pkgutil
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from typing import Dict, List, TYPE_CHECKING, Type, Any, Tuple
 
-from core.chat_history import ChatHistoryMessage
+from core.chat import LLMChat
+from core.chat_history import ChatHistoryMessage, LLMToolCall, LLMResponse
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.utils import mcp_client_integrations
-from core.chat import LLMChat
 
 if TYPE_CHECKING:
     from providers.utils.mcp_client_integrations.base import MCPIntegration
-
-
-@dataclass(kw_only=True)
-class LLMToolCall:
-    """Supports only calls of type function"""
-    id: str
-    name: str
-    arguments: Dict
-
-@dataclass
-class LLMResponse:
-    text: str
-    tool_calls: List[LLMToolCall] = field(default_factory=list)
 
 
 class BaseLLM(ABC):

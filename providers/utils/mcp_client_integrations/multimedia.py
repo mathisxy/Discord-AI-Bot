@@ -3,12 +3,14 @@ import logging
 import mimetypes
 import os
 import secrets
+from pathlib import Path
 from typing import List
 
 from fastmcp.client.logging import LogMessage
 from mcp import Tool
 from mcp.types import CallToolResult
 
+from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage, ChatHistoryFile
 from core.config import Config
 from core.discord_messages import DiscordMessageFileTmp, DiscordMessageReplyTmp, \
     DiscordMessageProgressTmp, DiscordMessageFile
@@ -70,25 +72,32 @@ class MultimediaMCPIntegration(MCPIntegration):
         if result.content[0].type == "image" or result.content[0].type == "audio":
 
             file_content = base64.b64decode(result.content[0].data)
-            media_type = result.content[0].mimeType
-            logging.debug(media_type)
-            ext = mimetypes.guess_extension(media_type)
+            mime_type = result.content[0].mimeType
+            logging.debug(mime_type)
+            ext = mimetypes.guess_extension(mime_type)
             logging.debug(ext)
 
             filename = f"{secrets.token_urlsafe(8)}{ext}"
 
             if result.content[0].type == "image":
 
+                with open(Path("downloads") / filename, "wb") as f:
+                    f.write(file_content)
+
                 await self.queue.put(DiscordMessageFile(value=file_content, filename=filename))
-                chat.history.append({"role": "assistant", "content": "", "images": [os.path.join("downloads", filename)]})
+                chat.history.append(
+                    ChatHistoryMessage(role="assistant", files=[
+                        ChatHistoryFileSaved(name=filename, mime_type=mime_type, save_path=Path("downloads") / filename)
+                    ])
+                )
 
             else:
                 await self.queue.put(DiscordMessageFile(value=file_content, filename=filename))
-                chat.history.append({"role": "assistant", "content": f"Du hast eine Datei gesendet: {filename}"})
-
-            # Damit die Datei schonmal gespeichert ist
-            with open(os.path.join("downloads", filename), "wb") as f:
-                f.write(file_content)
+                chat.history.append(
+                    ChatHistoryMessage(role="assistant", files=[
+                        ChatHistoryFile(name=filename, mime_type=mime_type)
+                    ])
+                )
 
             return False
 
@@ -98,7 +107,7 @@ class MultimediaMCPIntegration(MCPIntegration):
 
             logging.info(result_str)
 
-            self.llm.add_tool_call_results_message(chat, tool_call, result_str)
+            self.llm.add_tool_call_results_message(chat, [(tool_call, result_str)])
 
             return True
 
