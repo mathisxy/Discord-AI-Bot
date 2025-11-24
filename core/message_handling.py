@@ -99,7 +99,7 @@ async def handle_attachments(bot: commands.Bot, message: discord.Message) -> Lis
     return files
 
 
-async def save_file(bot: commands.Bot, message: discord.Message, attachment: discord.Attachment) -> ChatHistoryFileSaved:
+async def save_file(bot: commands.Bot, message: discord.Message, attachment: discord.Attachment) -> ChatHistoryFileSaved: # TODO automatic deletion
 
     path = Config.DOWNLOAD_FOLDER / str(message.channel.id)
     unique_filename = f"{attachment.filename}-{message.id}"
