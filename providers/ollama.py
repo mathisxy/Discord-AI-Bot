@@ -39,7 +39,7 @@ class OllamaLLM(DefaultLLM):
         keep_alive = keep_alive if keep_alive else Config.OLLAMA_KEEP_ALIVE
         timeout = timeout if timeout else Config.OLLAMA_TIMEOUT
 
-        # async with (chat.lock):
+        logging.info(messages)
 
         try:
 
