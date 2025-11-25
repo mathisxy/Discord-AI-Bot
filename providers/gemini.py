@@ -80,7 +80,7 @@ class GeminiLLM(DefaultLLM):
                     })
                 elif isinstance(file, ChatHistoryFileSaved) and file.mime_type in Config.GEMINI_VISION_MODEL_TYPES:
                     logging.info(f"Using vision for {file}")
-                    with open(file.save_path, "rb") as f:
+                    with open(file.full_path, "rb") as f:
                         b64 = base64.b64encode(f.read()).decode("utf-8")
 
                     parts.append({

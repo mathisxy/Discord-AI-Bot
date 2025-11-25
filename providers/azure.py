@@ -59,7 +59,7 @@ class AzureLLM(DefaultLLM):
                 logging.info(f"Found saved file entry in history: {file}")
                 if file.mime_type in Config.AZURE_OPENAI_VISION_MODEL_TYPES:
                     logging.info(f"Is image")
-                    with open(file.save_path, "rb") as f:
+                    with open(file.full_path, "rb") as f:
                         b64 = base64.b64encode(f.read()).decode("utf-8")
 
                         formatted_entry["content"].append({

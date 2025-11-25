@@ -100,7 +100,7 @@ class OllamaLLM(DefaultLLM):
                     logging.info(f"Found saved file entry in history: {file}")
                     if file.mime_type in Config.OLLAMA_VISION_MODEL_TYPES:
                         logging.info(f"Is image")
-                        images.append(file.save_path)
+                        images.append(file.full_path)
                 else:
                     content += f"\n<#File filename=\"{file.name}\">"
 

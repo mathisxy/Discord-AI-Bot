@@ -99,19 +99,20 @@ async def handle_attachments(bot: commands.Bot, message: discord.Message) -> Lis
     return files
 
 
-async def save_file(bot: commands.Bot, message: discord.Message, attachment: discord.Attachment) -> ChatHistoryFileSaved: # TODO automatic deletion
+async def save_file(bot: commands.Bot, message: discord.Message, attachment: discord.Attachment) -> ChatHistoryFileSaved:
 
     path = Config.DOWNLOAD_FOLDER / str(message.channel.id)
-    unique_filename = f"{attachment.filename}-{message.id}"
+    unique_filename = f"{message.id}-{attachment.filename}"
 
     os.makedirs(Config.DOWNLOAD_FOLDER / str(message.channel.id), exist_ok=True)
 
-    image_bytes = await attachment.read()
+    file_bytes = await attachment.read()
 
-    with open(path / unique_filename, "wb") as f:
-        f.write(image_bytes)
+    chat_history_file = ChatHistoryFileSaved(attachment.filename, attachment.content_type, path / unique_filename)
 
-    return ChatHistoryFileSaved(attachment.filename, attachment.content_type, path / unique_filename)
+    await chat_history_file.save(file_bytes)
+
+    return chat_history_file
 
 
 def get_queue_listener(bot: commands.Bot, message: discord.Message):

@@ -87,7 +87,7 @@ class MultimediaMCPIntegration(MCPIntegration):
                 await self.queue.put(DiscordMessageFile(value=file_content, filename=filename))
                 chat.history.append(
                     ChatHistoryMessage(role="assistant", files=[
-                        ChatHistoryFileSaved(name=filename, mime_type=mime_type, save_path=Path("downloads") / filename)
+                        ChatHistoryFileSaved(name=filename, mime_type=mime_type, full_path=Path(Config.DOWNLOAD_FOLDER) / filename)
                     ])
                 )
 
