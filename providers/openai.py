@@ -5,11 +5,10 @@ from typing import List, Dict, Any
 
 from openai import AsyncOpenAI
 
-from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage
+from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage, ChatHistoryController
 from core.config import Config
 from providers.base import LLMResponse, LLMToolCall
 from providers.default import DefaultLLM
-from core.chat import LLMChat
 
 
 class OpenAILLM(DefaultLLM):
@@ -19,7 +18,7 @@ class OpenAILLM(DefaultLLM):
         api_key=Config.OPENAI_API_KEY,
     )
 
-    async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: float | None = None,
+    async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: float | None = None,
                        timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
 
         model_name = model_name or Config.OPENAI_MODEL

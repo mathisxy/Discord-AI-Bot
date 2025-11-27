@@ -6,9 +6,9 @@ from fastmcp.client.logging import LogMessage
 from mcp import Tool
 from mcp.types import CallToolResult
 
+from core.chat_history import ChatHistoryController
 from core.discord_messages import DiscordMessage
 from providers.base import BaseLLM, LLMToolCall
-from core.chat import LLMChat
 
 
 class MCPIntegration:
@@ -33,7 +33,7 @@ class MCPIntegration:
     async def process_tool_result(self,
                                   tool_call: LLMToolCall,
                                   result: CallToolResult,
-                                  chat: LLMChat,
+                                  chat: ChatHistoryController,
                                   ) -> bool:
 
         """Returned boolean indicates whether the LLM should be called again"""

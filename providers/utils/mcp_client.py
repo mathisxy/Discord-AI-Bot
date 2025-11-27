@@ -7,17 +7,17 @@ from typing import List
 from fastmcp import Client
 from mcp.types import CallToolResult
 
+from core.chat_history import ChatHistoryController
 from core.config import Config
 from core.discord_messages import DiscordMessage, DiscordMessageReplyTmp, \
     DiscordMessageRemoveTmp, DiscordMessageReply, DiscordMessageReplyTmpError
 from providers.base import BaseLLM, LLMToolCall
-from core.chat import LLMChat
 from providers.utils.error_reasoning import error_reasoning
 from providers.utils.response_filtering import filter_response
 from providers.utils.tool_calls import mcp_to_dict_tools, get_custom_tools_system_prompt, get_tools_system_prompt
 
 
-async def generate_with_mcp(llm: BaseLLM, chat: LLMChat, queue: asyncio.Queue[DiscordMessage | None], use_help_bot: bool = False):
+async def generate_with_mcp(llm: BaseLLM, chat: ChatHistoryController, queue: asyncio.Queue[DiscordMessage | None], use_help_bot: bool = False):
 
     if not Config.MCP_SERVER_URL:
         raise Exception("Kein MCP Server URL verfügbar")

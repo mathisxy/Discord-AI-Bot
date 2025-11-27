@@ -6,8 +6,8 @@ from typing import List, Dict, Literal, Any, Tuple
 
 from ollama import AsyncClient
 
-from core.chat import LLMChat
-from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved, ChatHistoryFile, ChatHistoryFileText
+from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved, ChatHistoryFile, ChatHistoryFileText, \
+    ChatHistoryController
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.default import DefaultLLM, LLMResponse, LLMToolCall
@@ -19,13 +19,15 @@ class OllamaLLM(DefaultLLM):
     async def call(self, history: List[ChatHistoryMessage], instructions: ChatHistoryMessage, queue: asyncio.Queue[DiscordMessage | None],
                    channel: str, use_help_bot=False):
 
-        self.chats.setdefault(channel, LLMChat(AsyncClient(host=Config.OLLAMA_URL)))
+        self.chats.setdefault(channel, ChatHistoryController())
+
+        self.chats[channel].client = AsyncClient(host=Config.OLLAMA_URL) # dynamic attribute
 
         await super().call(history, instructions, queue, channel, use_help_bot)
 
 
 
-    async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: str | None = None, think: bool | Literal["low", "medium", "high"] | None = None, keep_alive: str | float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
+    async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: str | None = None, think: bool | Literal["low", "medium", "high"] | None = None, keep_alive: str | float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
 
         if Config.OLLAMA_REQUIRED_VRAM_IN_GB:
             await wait_for_vram(required_gb=Config.OLLAMA_REQUIRED_VRAM_IN_GB, timeout=Config.OLLAMA_WAIT_FOR_REQUIRED_VRAM)
@@ -44,7 +46,7 @@ class OllamaLLM(DefaultLLM):
         try:
 
             response = await asyncio.wait_for(
-                chat.client.chat(
+                chat.client.chat( # dynamic attribute
                     model=model_name,
                     messages=messages,
                     stream=False,
@@ -70,7 +72,7 @@ class OllamaLLM(DefaultLLM):
             raise Exception(f"Ollama Error: {e}")
 
     @classmethod
-    def add_tool_call_results_message(cls, chat: LLMChat, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
+    def add_tool_call_results_message(cls, chat: ChatHistoryController, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
 
         for tool_response in tool_responses:
             chat.history.append(ChatHistoryMessage(role="tool", tool_response=tool_response, is_temporary=True))
@@ -81,11 +83,17 @@ class OllamaLLM(DefaultLLM):
 
         if entry.tool_response: # TODO adapt to API Reference of ollama
             tool_call, tool_response = entry.tool_response
-            return {
-                "role": "tool" if Config.TOOL_INTEGRATION else "system",
-                "tool_call_id": tool_call.id,
-                "content": tool_response,
-            }
+            if Config.TOOL_INTEGRATION:
+                return {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_response,
+                }
+            else:
+                return {
+                    "role": "system",
+                    "content": f"{{\"tool\": \"{tool_call.name}\", \"response\": \"{tool_response}\"",
+                }
 
         content = entry.content if entry.content else ""
         tool_calls = []

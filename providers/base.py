@@ -5,8 +5,7 @@ import pkgutil
 from abc import ABC, abstractmethod
 from typing import Dict, List, TYPE_CHECKING, Type, Any, Tuple
 
-from core.chat import LLMChat
-from core.chat_history import ChatHistoryMessage, LLMToolCall, LLMResponse
+from core.chat_history import ChatHistoryMessage, LLMToolCall, LLMResponse, ChatHistoryController
 from core.config import Config
 from core.discord_messages import DiscordMessage
 from providers.utils import mcp_client_integrations
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
 class BaseLLM(ABC):
 
     def __init__(self):
-        self.chats: Dict[str, LLMChat] = {}
+        self.chats: Dict[str, ChatHistoryController] = {}
         self.mcp_client_integration_module: Type[MCPIntegration] = self.load_mcp_integration_class()
 
 
@@ -28,7 +27,7 @@ class BaseLLM(ABC):
 
 
     @abstractmethod
-    async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
+    async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
         pass
 
 
@@ -56,22 +55,22 @@ class BaseLLM(ABC):
 
     @classmethod
     @abstractmethod
-    def add_assistant_message(cls, chat: LLMChat, message: str) -> None:
+    def add_assistant_message(cls, chat: ChatHistoryController, message: str) -> None:
         pass
 
     @classmethod
     @abstractmethod
-    def add_error_message(cls, chat: LLMChat, message: str) -> None:
+    def add_error_message(cls, chat: ChatHistoryController, message: str) -> None:
         pass
 
     @classmethod
     @abstractmethod
-    def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
+    def add_tool_call_message(cls, chat: ChatHistoryController, tool_calls: List[LLMToolCall]) -> None:
         pass
 
     @classmethod
     @abstractmethod
-    def add_tool_call_results_message(cls, chat: LLMChat, tool_responses: List[Tuple[LLMToolCall, str]]) -> None:
+    def add_tool_call_results_message(cls, chat: ChatHistoryController, tool_responses: List[Tuple[LLMToolCall, str]]) -> None:
         pass
 
     @classmethod

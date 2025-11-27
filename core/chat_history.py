@@ -1,7 +1,12 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Literal, Tuple, Dict, List
+from typing import Literal, Tuple, Dict, List, Type
 from pathlib import Path
+
+import tiktoken
+
+from core.config import Config
+
 
 @dataclass(kw_only=True)
 class LLMToolCall:
@@ -26,6 +31,8 @@ class ChatHistoryFileSaved(ChatHistoryFile):
 
     full_path: Path
     """Full save path including the filename"""
+    temporary: bool = field(default=True)
+    """File gets deleted if __del__ is called"""
 
     def __post_init__(self):
         self.validate_path()
@@ -45,13 +52,18 @@ class ChatHistoryFileSaved(ChatHistoryFile):
         with open(self.full_path, "wb") as f:
             f.write(file_bytes)
 
-    def __del__(self):
+    def delete(self) -> None:
         if self.full_path.exists():
             try:
                 self.full_path.unlink(missing_ok=True)
                 logging.info(f"Deleted '{self.full_path}'")
             except Exception as e:
                 logging.exception(f"Deletion of '{self.full_path}' failed: {e}")
+
+    def __del__(self):
+        if self.temporary:
+            self.delete()
+
 
 
 @dataclass
@@ -69,3 +81,82 @@ class ChatHistoryMessage:
     tool_response: Tuple[LLMToolCall, str] = field(default_factory=list)
 
     is_temporary: bool = False
+
+
+class ChatHistoryController:
+
+    history: List[ChatHistoryMessage]
+
+    def __init__(self, history: List[ChatHistoryMessage] | None = None, max_tokens: int = Config.MAX_TOKENS, tokenizer: tiktoken = tiktoken.get_encoding("cl100k_base")):
+        self.history = history if history else []
+        self.max_tokens = max_tokens
+        self.tokenizer = tokenizer
+
+
+    @property
+    def system_entry(self) -> ChatHistoryMessage | None:
+        if self.history:
+            return self.history[0]
+        return None
+
+    @system_entry.setter
+    def system_entry(self, value: ChatHistoryMessage):
+        if not self.history:
+            self.history = [value]
+        else:
+            self.history[0] = value
+
+    def update(self, new_history: List[ChatHistoryMessage], instructions_entry: ChatHistoryMessage | None = None, min_overlap=1, max_tokens:int|None = None, tokenizer: Type[tiktoken]|None = None):
+
+        history_without_temporary_messages = [x for x in self.history if not x.is_temporary]
+
+        max_overlap_length = len(history_without_temporary_messages)
+        overlap_length = None
+
+        for length in range(max_overlap_length, min_overlap, -1):
+            if history_without_temporary_messages[-length:] == new_history[:length]:
+                overlap_length = length
+                logging.info(f"OVERLAP LENGTH: {overlap_length}")
+                break
+
+        if not overlap_length:
+            logging.info("NO OVERLAP")
+            logging.info(self.history)
+            logging.info(new_history)
+            self.history = [instructions_entry] if instructions_entry else []
+            self.history.extend(new_history)
+        else:
+
+            if instructions_entry and self.system_entry != instructions_entry:
+                logging.info("UPDATING INSTRUCTIONS")
+                logging.info(self.system_entry)
+                logging.info(instructions_entry)
+                self.system_entry = instructions_entry
+
+            self.history = self.history + new_history[overlap_length:]
+
+        logging.info(f"TOKEN COUNT: {self.count_tokens(tokenizer=tokenizer)}")
+        logging.info(f"SYSTEM MESSAGE TOKEN COUNT: {self.count_tokens(history=[self.system_entry], tokenizer=tokenizer)}")
+
+        if self.count_tokens(tokenizer=tokenizer) > (max_tokens if max_tokens else self.max_tokens):
+            logging.info("CUTTING BECAUSE OF EXCEEDING TOKEN COUNT")
+            self.history = [instructions_entry] if instructions_entry else []
+            self.history.extend(new_history)
+            logging.info(self.history)
+
+
+    def build_prompt(self, history: List[ChatHistoryMessage]=None) -> str:
+        """Only builds role and content"""
+
+        if history is None:
+            history = self.history
+
+        prompt_lines = []
+        for msg in history:
+            prompt_lines.append(f"{msg.role}: {msg.content}")
+        return "\n".join(prompt_lines)
+
+    def count_tokens(self, history: List[ChatHistoryMessage]|None=None, tokenizer: Type[tiktoken]|None = None) -> int:
+        prompt = self.build_prompt(history)
+        tokenizer = tokenizer if tokenizer else self.tokenizer
+        return len(tokenizer.encode(prompt))

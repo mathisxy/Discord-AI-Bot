@@ -1,10 +1,8 @@
 import asyncio
 import logging
-from datetime import datetime
 from typing import List
 
 import discord
-from babel.dates import format_date
 from discord.ext import commands
 from dotenv import load_dotenv
 

@@ -5,11 +5,10 @@ import string
 from abc import abstractmethod
 from typing import List, Dict, Any, Tuple
 
-from core.chat_history import ChatHistoryMessage, ChatHistoryFile, ChatHistoryFileText
+from core.chat_history import ChatHistoryMessage, ChatHistoryFile, ChatHistoryFileText, ChatHistoryController
 from core.config import Config
 from core.discord_messages import DiscordMessage, DiscordMessageReply
 from providers.base import LLMToolCall, LLMResponse, BaseLLM
-from core.chat import LLMChat
 from providers.utils.mcp_client import generate_with_mcp
 
 
@@ -17,9 +16,9 @@ class DefaultLLM(BaseLLM):
 
     async def call(self, history: List[ChatHistoryMessage], instructions: ChatHistoryMessage, queue: asyncio.Queue[DiscordMessage | None], channel: str, use_help_bot=False):
 
-        self.chats.setdefault(channel, LLMChat())
+        self.chats.setdefault(channel, ChatHistoryController())
 
-        self.chats[channel].update_history(history, instructions)
+        self.chats[channel].update(history, instructions)
 
         if Config.MCP_INTEGRATION_CLASS:
             await generate_with_mcp(self, self.chats[channel], queue, use_help_bot)
@@ -29,8 +28,9 @@ class DefaultLLM(BaseLLM):
 
 
     @abstractmethod
-    async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
+    async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
         pass
+
 
     @classmethod
     def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
@@ -82,22 +82,22 @@ class DefaultLLM(BaseLLM):
 
 
     @classmethod
-    def add_assistant_message(cls, chat: LLMChat, message: str) -> None:
+    def add_assistant_message(cls, chat: ChatHistoryController, message: str) -> None:
         # chat.history.append({"role": "assistant", "content": message})
         chat.history.append(ChatHistoryMessage(role="assistant", content=message))
 
     @classmethod
-    def add_error_message(cls, chat: LLMChat, message: str) -> None:
+    def add_error_message(cls, chat: ChatHistoryController, message: str) -> None:
         # chat.history.append({"role": "system", "content": message})
         chat.history.append(ChatHistoryMessage(role="system", content=message))
 
     @classmethod
-    def add_tool_call_message(cls, chat: LLMChat, tool_calls: List[LLMToolCall]) -> None:
+    def add_tool_call_message(cls, chat: ChatHistoryController, tool_calls: List[LLMToolCall]) -> None:
         if Config.TOOL_INTEGRATION:
             chat.history.append(ChatHistoryMessage(role="assistant", tool_calls=tool_calls, is_temporary=True))
 
     @classmethod
-    def add_tool_call_results_message(cls, chat: LLMChat, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
+    def add_tool_call_results_message(cls, chat: ChatHistoryController, tool_responses: [Tuple[LLMToolCall, str]]) -> None:
 
         for tool_response in tool_responses:
             chat.history.append(ChatHistoryMessage(role="tool", tool_response=tool_response, is_temporary=True))

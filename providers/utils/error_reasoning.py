@@ -1,14 +1,13 @@
 import logging
 
-from core.chat_history import ChatHistoryMessage
+from core.chat_history import ChatHistoryMessage, ChatHistoryController
 from providers.base import BaseLLM
-from core.chat import LLMChat
 
 
 async def error_reasoning(
         error_message: str,
         llm: BaseLLM,
-        chat: LLMChat,
+        chat: ChatHistoryController,
 ):
 
     instructions = chat.history[0].content
@@ -62,7 +61,7 @@ Erkläre dann klar und möglichst knapp wie der Fehler entstanden ist und wie er
 
     logging.info(context)
 
-    reasoning_chat = LLMChat()
+    reasoning_chat = ChatHistoryController()
     reasoning_chat.history.append(ChatHistoryMessage(role="system", content=context))
 
     reasoning = await llm.generate(reasoning_chat)

@@ -1,7 +1,6 @@
 import base64
 import logging
 import mimetypes
-import os
 import secrets
 from pathlib import Path
 from typing import List
@@ -10,12 +9,11 @@ from fastmcp.client.logging import LogMessage
 from mcp import Tool
 from mcp.types import CallToolResult
 
-from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage, ChatHistoryFile
+from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage, ChatHistoryFile, ChatHistoryController
 from core.config import Config
 from core.discord_messages import DiscordMessageFileTmp, DiscordMessageReplyTmp, \
     DiscordMessageProgressTmp, DiscordMessageFile
 from providers.base import LLMToolCall
-from core.chat import LLMChat
 from providers.utils.mcp_client_integrations.base import MCPIntegration
 
 
@@ -57,7 +55,7 @@ class MultimediaMCPIntegration(MCPIntegration):
     async def process_tool_result(self,
                                   tool_call: LLMToolCall,
                                   result: CallToolResult,
-                                  chat: LLMChat,
+                                  chat: ChatHistoryController,
                                   ) -> bool:
 
         """Returned boolean indicates whether the LLM should be called again"""

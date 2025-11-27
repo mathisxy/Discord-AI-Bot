@@ -5,17 +5,16 @@ from typing import List, Dict, Any
 
 from mistralai import Mistral
 
-from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved
+from core.chat_history import ChatHistoryMessage, ChatHistoryFileSaved, ChatHistoryController
 from core.config import Config
 from providers.default import DefaultLLM, LLMResponse, LLMToolCall
-from core.chat import LLMChat
 
 
 class MistralLLM(DefaultLLM):
 
     client = Mistral(api_key=Config.MISTRAL_API_KEY)
 
-    async def generate(self, chat: LLMChat, model_name: str | None = None, temperature: float | None = None,
+    async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: float | None = None,
                        timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
 
         model_name = model_name if model_name else Config.MISTRAL_MODEL
@@ -39,7 +38,7 @@ class MistralLLM(DefaultLLM):
 
 
     @classmethod
-    def add_error_message(cls, chat: LLMChat, message: str):
+    def add_error_message(cls, chat: ChatHistoryController, message: str):
         chat.history.append(ChatHistoryMessage(role="user", content=message))
 
     @classmethod
