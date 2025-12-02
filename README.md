@@ -29,8 +29,8 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
 
 1. 📦 Clone Repository:
    ```bash
-   git clone https://github.com/mathisxy/emanuel.git
-   cd emanuel
+   git clone https://github.com/mathisxy/discord-ai.git
+   cd discord-ai
    ```
 2. 🧰 Install Dependencies\
    Make sure that **Python 3.12+** is installed.\
