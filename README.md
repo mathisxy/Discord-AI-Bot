@@ -96,7 +96,7 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
 
     - Check for errors:
     ```
-    journalctl -u {servicename}.service
+    journalctl -u {botname}.service
     ```
 
     - ❌ Stop and remove:
