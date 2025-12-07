@@ -91,7 +91,13 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
     sudo systemctl daemon-reload
     sudo systemctl start {botname}
     sudo systemctl enable {botname}
-    ```   
+    sudo service {botname} status
+    ```
+
+    - Check for errors:
+    ```
+    journalctl -u {servicename}.service
+    ```
 
     - ❌ Stop and remove:
     ```bash
