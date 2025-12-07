@@ -1,10 +1,9 @@
 import base64
-import json
 import logging
 from typing import List, Dict, Any
 
-import google.generativeai as genai
-from openai import AsyncOpenAI
+from google import genai
+from google.genai import types
 
 from core.chat_history import ChatHistoryFileSaved, ChatHistoryMessage, ChatHistoryFile, ChatHistoryFileText, \
     ChatHistoryController
@@ -16,12 +15,7 @@ from providers.default import DefaultLLM
 class GeminiLLM(DefaultLLM):
 
 
-    client = AsyncOpenAI(
-        api_key=Config.GEMINI_API_KEY,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    )
-
-    genai.configure(api_key=Config.GEMINI_API_KEY)
+    client = genai.Client(api_key=Config.GEMINI_API_KEY)
 
 
     async def generate(self, chat: ChatHistoryController, model_name: str | None = None, temperature: float | None = None,
@@ -30,36 +24,31 @@ class GeminiLLM(DefaultLLM):
         model_name = model_name or Config.GEMINI_MODEL
         messages = [self.format_history_entry(msg) for msg in chat.history]
 
-
-        model = genai.GenerativeModel(
-            model_name,
+        config = types.GenerateContentConfig(
             tools=tools,
-            generation_config={
-                **({"temperature": temperature} if temperature is not None else {})
-            }
+            **({"temperature": temperature} if temperature is not None else {})
         )
 
-        response = await model.generate_content_async(
-            messages
+        response = self.client.models.generate_content(
+            model=model_name,
+            contents=messages,
+            config=config,
         )
-
-        # completion = await self.client.chat.completions.create(
-        #     model=model_name,
-        #     messages=chat.history,
-        #     temperature=temperature,
-        #     tools=tools
-        # )
 
         message = response.text
 
         tool_calls = []
-        for part in response.candidates[0]:
-            if call := part.function_call:
-                tool_calls.append(
-                    LLMToolCall(id="", name=call.name, arguments=json.loads(call.arguments))
-                )
 
-        return LLMResponse(message.content, tool_calls)
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+
+            for part in response.candidates[0].content.parts:
+
+                if call := part.function_call:
+                    tool_calls.append(
+                        LLMToolCall(id="", name=call.name, arguments=call.args)
+                    )
+
+        return LLMResponse(message, tool_calls)
 
 
     @classmethod
@@ -91,73 +80,32 @@ class GeminiLLM(DefaultLLM):
                     })
                 else:
                     parts.append({
-                        "text": f"<#File name=\"{file.name}\">"
+                        "text": f"<#File name=\"{file.name}\">",
                     })
 
         for tool_call in entry.tool_calls:
             parts.append({
                 "function_call": {
                     "name": tool_call.name,
-                    "arguments": tool_call.arguments
+                    "arguments": tool_call.arguments,
                 }
             })
 
-        for tool_response in entry.tool_response:
+        if entry.tool_response:
+            tool_call, response = entry.tool_response
             parts.append({
                 "function_response":
                     {
-                        "name": tool_response.name,
-                        "response": tool_response.content
+                        "name": tool_call.name,
+                        "response": response,
                     }
             })
 
         formatted_entry = {
-            "role": entry.role,
+            "role": entry.role if entry.role != "assistant" else "model",
             "parts": parts,
         }
 
         logging.info(formatted_entry)
 
-        return formatted_entry
-
-
-    # @classmethod
-    # def format_history_entry(cls, entry: ChatHistoryMessage) -> Dict[str, Any]:
-    #     formatted_entry = super().format_history_entry(entry)
-    #
-    #     base64_images = []
-    #
-    #     for file in entry.files:
-    #         logging.info(file)
-    #         if isinstance(file, ChatHistoryFileSaved):
-    #             logging.info(f"Found saved file entry in history: {file}")
-    #             if file.mime_type in Config.GEMINI_IMAGE_MODEL_TYPES:
-    #                 logging.info(f"Is image")
-    #                 with open(file.save_path, "rb") as f:
-    #                     b64 = base64.b64encode(f.read()).decode("utf-8")
-    #                     base64_images.append({"base64": b64, "file": file})
-    #
-    #     if base64_images:
-    #
-    #         if entry.role != "user":
-    #             formatted_entry["role"] = "user" # Because Gemini API doesnt accept images from not users
-    #
-    #         if formatted_entry.get("content"):
-    #             formatted_entry["content"] = [{
-    #                 "type": "text",
-    #                 "text": formatted_entry["content"],
-    #             }]
-    #         else:
-    #             formatted_entry["content"] = []
-    #
-    #         for image in base64_images:
-    #             formatted_entry["content"].append({
-    #                 "type": "image_url",
-    #                 "image_url": {
-    #                     "url":  f"data:{image["file"].mime_type};base64,{image["base64"]}"
-    #                 },
-    #             },)
-    #
-    #     logging.info(formatted_entry)
-    #
-    #     return formatted_entry
+        return formatted_entry # TODO ROLES

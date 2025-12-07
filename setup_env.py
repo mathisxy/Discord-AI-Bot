@@ -31,8 +31,8 @@ def main():
     print("=== Discord Bot Environment Setup ===\n")
 
     bot_name = prompt_default("Enter bot name", "Emanuel")
-    discord_token = prompt_default("Enter Discord Token")
-    discord_id = prompt_default("Enter Discord Bot Application ID")
+    discord_token = prompt_default("Enter Discord Token (https://discord.com/developers/applications/ -> Bot)")
+    discord_id = prompt_default("Enter Discord Bot Application ID (-> General Information)")
     language = prompt_default("Language (en/de)", "en")
 
     lines = replace_line(lines, "NAME", bot_name)

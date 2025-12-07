@@ -20,7 +20,7 @@ class DefaultLLM(BaseLLM):
 
         self.chats[channel].update(history, instructions)
 
-        if Config.MCP_INTEGRATION_CLASS:
+        if Config.MCP_SERVER_URL:
             await generate_with_mcp(self, self.chats[channel], queue, use_help_bot)
         else:
             response = await self.generate(self.chats[channel])
