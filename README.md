@@ -25,7 +25,7 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
 
 <br>
 
-## ⚙️ Installation on Linux
+## ⚙️ Installation on Ubuntu
 
 1. 📦 Clone Repository:
    ```bash
@@ -37,6 +37,7 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
    Create and activate a Python Virtual Environment:
 
    ```bash
+   sudo apt install python3.12-venv
    python3 -m venv venv
    source venv/bin/activate
    ```
@@ -79,13 +80,23 @@ This project implements a custom **Discord Bot** with integrated **AI Backend** 
    python main.py
    ```
    **Option 2: As a systemd service**
+
+    ```
+    python setup_service.py
+    ```
+   
     - ✅ Create and activate:
     ```bash
     sudo cp {botname}.service /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl start {botname}
     sudo systemctl enable {botname}
-    ```   
+    ```
+
+    - Check for errors:
+    ```
+    journalctl -u {botname}.service
+    ```
 
     - ❌ Stop and remove:
     ```bash
