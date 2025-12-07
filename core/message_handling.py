@@ -80,21 +80,18 @@ async def handle_attachments(bot: commands.Bot, message: discord.Message) -> Lis
         logging.info(attachment.content_type)
 
         if attachment.content_type:
-            # Mapping: Welcher Provider nutzt welche Vision-Settings?
-            # Format: "Provider": (Vision_Aktiviert_Flag, Erlaubte_Typen_Liste)
+
             vision_configs = {
-                "mistral": (Config.MISTRAL_VISION, Config.MISTRAL_VISION_MODEL_TYPES),
-                "azure":   (Config.AZURE_OPENAI_VISION, Config.AZURE_OPENAI_VISION_MODEL_TYPES),
-                "gemini":  (Config.GEMINI_VISION, Config.GEMINI_VISION_MODEL_TYPES), # Checke deine Config-Namen hier!
-                "openai":  (Config.OPENAI_VISION, Config.OPENAI_VISION_MODEL_TYPES),
-                "ollama":  (Config.OLLAMA_VISION, Config.OLLAMA_VISION_MODEL_TYPES),
+                "mistral": Config.MISTRAL_VISION,
+                "azure":   Config.AZURE_OPENAI_VISION,
+                "gemini":  Config.GEMINI_VISION,
+                "openai":  Config.OPENAI_VISION,
+                "ollama":  Config.OLLAMA_VISION,
             }
 
-            # Hole die Config für den aktuellen Provider (Standard: False und leere Liste)
-            is_vision_enabled, allowed_types = vision_configs.get(Config.AI, (False, []))
+            is_vision_enabled = vision_configs.get(Config.AI)
 
-            # Die eigentliche Logik (nur noch einmal schreiben!)
-            if is_vision_enabled: # attachment.content_type in allowed_types:
+            if is_vision_enabled:
                 files.append(await save_file(bot, message, attachment))
             else:
                 logging.info("Add only Filename: %s", attachment)

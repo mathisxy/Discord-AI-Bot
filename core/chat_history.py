@@ -93,7 +93,7 @@ class ChatHistoryController:
 
     @property
     def system_entry(self) -> ChatHistoryMessage | None:
-        if self.history:
+        if self.history and self.history[0].role == "system":
             return self.history[0]
         return None
 

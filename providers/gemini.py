@@ -23,13 +23,20 @@ class GeminiLLM(DefaultLLM):
 
         model_name = model_name or Config.GEMINI_MODEL
         messages = [self.format_history_entry(msg) for msg in chat.history]
+        system_instruction = self.format_history_entry(chat.system_entry) if chat.history else None
+        if system_instruction:
+            messages = messages[1:]
+
 
         config = types.GenerateContentConfig(
             tools=tools,
-            **({"temperature": temperature} if temperature is not None else {})
+            **({"system_instruction": system_instruction} if system_instruction is not None else {}),
+            **({"temperature": temperature} if temperature is not None else {}),
         )
 
-        response = self.client.models.generate_content(
+        logging.info(config)
+
+        response = await self.client.aio.models.generate_content(
             model=model_name,
             contents=messages,
             config=config,
@@ -101,8 +108,12 @@ class GeminiLLM(DefaultLLM):
                     }
             })
 
+        role = entry.role
+        if role == "assistant":
+            role = "model"
+
         formatted_entry = {
-            "role": entry.role if entry.role != "assistant" else "model",
+            "role": role,
             "parts": parts,
         }
 
