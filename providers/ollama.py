@@ -25,15 +25,9 @@ class ChatHistoryControllerOllama(ChatHistoryController):
 
 class OllamaLLM(DefaultLLM):
 
-    async def call(self, history: List[ChatHistoryMessage], instructions: ChatHistoryMessage, queue: asyncio.Queue[DiscordMessage | None],
-                   channel: str, use_help_bot=False):
-
-        self.chats: Dict[str, ChatHistoryControllerOllama]
-
-        self.chats.setdefault(channel, ChatHistoryControllerOllama(AsyncClient(host=Config.OLLAMA_URL)))
-
-        await super().call(history, instructions, queue, channel, use_help_bot)
-
+    @classmethod
+    async def get_empty_history_controller(cls) -> ChatHistoryController:
+        return ChatHistoryControllerOllama(AsyncClient(host=Config.OLLAMA_URL))
 
 
     async def generate(self, chat: ChatHistoryControllerOllama, model_name: str | None = None, temperature: str | None = None, think: bool | Literal["low", "medium", "high"] | None = None, keep_alive: str | float | None = None, timeout: float | None = None, tools: List[Dict] | None = None) -> LLMResponse:
@@ -51,11 +45,12 @@ class OllamaLLM(DefaultLLM):
         timeout = timeout if timeout else Config.OLLAMA_TIMEOUT
 
         logging.info(messages)
+        logging.info(chat.client)
 
         try:
 
             response = await asyncio.wait_for(
-                chat.client.chat( # dynamic attribute
+                chat.client.chat(
                     model=model_name,
                     messages=messages,
                     stream=False,

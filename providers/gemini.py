@@ -64,49 +64,45 @@ class GeminiLLM(DefaultLLM):
         parts = []
 
         if entry.content:
-            parts.append({
-                "text": entry.content
-            })
+            parts.append(types.Part.from_text(
+                text= entry.content
+            ))
 
         for file in entry.files:
             if isinstance(file, ChatHistoryFile):
                 if isinstance(file, ChatHistoryFileText):
-                    parts.append({
-                        "text": f"<#File name=\"{file.name}\">{file.text_content}</File>"
-                    })
+                    parts.append(types.Part.from_text(
+                        text= f"<#File name=\"{file.name}\">{file.text_content}</File>"
+                    ))
                 elif isinstance(file, ChatHistoryFileSaved) and file.mime_type in Config.GEMINI_VISION_MODEL_TYPES:
                     logging.info(f"Using vision for {file}")
                     with open(file.full_path, "rb") as f:
-                        b64 = base64.b64encode(f.read()).decode("utf-8")
+                        # b64 = base64.b64encode(f.read()).decode("utf-8")
+                        data = f.read()
 
-                    parts.append({
-                        "inline_data": {
-                            "mime_type": file.mime_type,
-                            "data": b64,
-                        }
-                    })
+                    parts.append(types.Part.from_bytes(
+                        data=data,
+                        mime_type=file.mime_type,
+                    ))
                 else:
-                    parts.append({
-                        "text": f"<#File name=\"{file.name}\">",
-                    })
+                    parts.append(types.Part.from_text(
+                        text= f"<#File name=\"{file.name}\">",
+                    ))
 
         for tool_call in entry.tool_calls:
-            parts.append({
-                "function_call": {
-                    "name": tool_call.name,
-                    "arguments": tool_call.arguments,
-                }
-            })
+            parts.append(types.Part.from_function_call(
+                name=tool_call.name,
+                args=tool_call.arguments,
+            ))
 
         if entry.tool_response:
             tool_call, response = entry.tool_response
-            parts.append({
-                "function_response":
-                    {
-                        "name": tool_call.name,
-                        "response": response,
-                    }
-            })
+            parts.append(types.Part.from_function_response(
+                name=tool_call.name,
+                response={
+                    "result": response,
+                }
+            ))
 
         role = entry.role
         if role == "assistant":

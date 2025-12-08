@@ -61,7 +61,7 @@ Erkläre dann klar und möglichst knapp wie der Fehler entstanden ist und wie er
 
     logging.info(context)
 
-    reasoning_chat = ChatHistoryController()
+    reasoning_chat = await llm.get_empty_history_controller()
     reasoning_chat.history.append(ChatHistoryMessage(role="system", content=context))
 
     reasoning = await llm.generate(reasoning_chat)

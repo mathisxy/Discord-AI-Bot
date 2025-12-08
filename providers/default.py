@@ -14,9 +14,14 @@ from providers.utils.mcp_client import generate_with_mcp
 
 class DefaultLLM(BaseLLM):
 
+    @classmethod
+    async def get_empty_history_controller(cls) -> ChatHistoryController:
+        return ChatHistoryController()
+
+
     async def call(self, history: List[ChatHistoryMessage], instructions: ChatHistoryMessage, queue: asyncio.Queue[DiscordMessage | None], channel: str, use_help_bot=False):
 
-        self.chats.setdefault(channel, ChatHistoryController())
+        self.chats.setdefault(channel, await self.get_empty_history_controller())
 
         self.chats[channel].update(history, instructions)
 

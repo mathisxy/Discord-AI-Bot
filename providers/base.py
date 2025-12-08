@@ -21,6 +21,11 @@ class BaseLLM(ABC):
         self.mcp_client_integration_module: Type[MCPIntegration] = self.load_mcp_integration_class()
 
 
+    @classmethod
+    @abstractmethod
+    async def get_empty_history_controller(cls) -> ChatHistoryController:
+        pass
+
     @abstractmethod
     async def call(self, history: List[ChatHistoryMessage], instructions: ChatHistoryMessage, queue: asyncio.Queue[DiscordMessage | None], channel: str, use_help_bot=False):
         pass
