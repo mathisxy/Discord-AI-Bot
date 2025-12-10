@@ -40,6 +40,8 @@ async def generate_with_mcp(llm: BaseLLM, chat: ChatHistoryController, queue: as
         else:
             chat.system_entry.content += get_tools_system_prompt()
 
+        logging.info(f"SYSTEM PROMPT TOKEN COUNT WITH FUNCTION INSTRUCTIONS: {chat.count_tokens([chat.system_entry])}")
+
         tool_call_errors = False
 
 

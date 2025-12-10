@@ -2,6 +2,7 @@ import json
 from typing import List, Dict
 
 from fastmcp.tools import Tool
+from toon_format import encode
 
 from core.config import Config
 
@@ -26,6 +27,8 @@ def mcp_to_dict_tools(mcp_tools: List[Tool]) -> List[Dict[str, str|Dict]]:
 def get_custom_tools_system_prompt(mcp_tools: List[Tool]) -> str:
 
     dict_tools = mcp_to_dict_tools(mcp_tools)
+    str_tools = json.dumps(dict_tools, separators=(',', ': '), ensure_ascii=False)
+    # str_tools = encode(dict_tools)
 
     match Config.LANGUAGE:
         case "de":
@@ -36,7 +39,7 @@ Du bist hilfreich und zuverlässig.
 
 *Du hast Zugriff auf folgende Tools:*
 
-{json.dumps(dict_tools, separators=(',', ': '), ensure_ascii=False)}
+{str_tools}
 
 Nutze die Tools, um Informationen zu erhalten und Aufgaben zu erledigen. Frage, wenn du dir unsicher bist. 
 Nutze die Tools immer nur wenn nötig!
@@ -76,7 +79,7 @@ You are helpful and reliable.
 
 *You have access to the following tools:*
 
-{json.dumps(dict_tools, separators=(',', ': '), ensure_ascii=False)}
+{str_tools}
 
 Use these tools to get information and complete tasks.
 Ask if you're unsure.  
